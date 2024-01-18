@@ -12,6 +12,9 @@ class Deck:
     def __init__(self):
         self.suits = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
         self.ranks = [str(i) for i in range(1, 14)]
+        self.cards = []
+
+    def shuffle_and_deal(self):
         self.cards = [Card(suit, rank) for suit in self.suits for rank in self.ranks]
         random.shuffle(self.cards)
 
@@ -20,6 +23,9 @@ class Deck:
 
 class Player:
     def __init__(self):
+        self.hand = []
+
+    def reset_hand(self):
         self.hand = []
 
     def add_card(self, card):
@@ -45,6 +51,17 @@ class Player:
 
         return total
 
+    def choose_ace_value(self):
+        for card in self.hand:
+            if card.rank == 'Ace':
+                value = input("Do you want the Ace to be 1 or 11? ")
+                while value not in ['1', '11']:
+                    value = input("Invalid input. Please enter 1 or 11: ")
+                total = self.calculate_total() - 11  # Subtract the current Ace value
+                total += int(value)
+                return total
+        return self.calculate_total()
+
 class BlackjackGame:
     def __init__(self):
         self.deck = Deck()
@@ -52,6 +69,10 @@ class BlackjackGame:
         self.dealer = Player()
 
     def deal_initial_cards(self):
+        self.deck.shuffle_and_deal()
+        self.player.reset_hand()
+        self.dealer.reset_hand()
+
         for _ in range(2):
             self.player.add_card(self.deck.deal())
             self.dealer.add_card(self.deck.deal())
@@ -67,7 +88,7 @@ class BlackjackGame:
             if action == 'hit':
                 self.player.add_card(self.deck.deal())
                 print(f"Player's cards: {', '.join(str(card) for card in self.player.hand)}")
-                total = self.player.calculate_total()
+                total = self.player.choose_ace_value()
                 print(f"Total: {total}")
 
                 if total > 21:
@@ -100,27 +121,32 @@ class BlackjackGame:
 
     def play_game(self):
         print("Welcome to Python Blackjack!")
-        self.deal_initial_cards()
-        self.display_initial_cards()
+        while True:
+            self.deal_initial_cards()
+            self.display_initial_cards()
 
-        # Player's turn
-        player_result = self.player_turn()
-        if player_result == 'bust':
-            return
+            # Player's turn
+            player_result = self.player_turn()
+            if player_result == 'bust':
+                break  # Exit the loop if the player busts
 
-        # Dealer's turn
-        self.dealer_turn()
+            # Dealer's turn
+            self.dealer_turn()
 
-        # Determine winner
-        winner = self.determine_winner()
+            # Determine winner
+            winner = self.determine_winner()
 
-        if winner == 'player':
-            print("Congratulations! You win.")
-        elif winner == 'dealer':
-            print("Sorry, you lose. Better luck next time.")
-        else:
-            print("It's a tie!")
+            if winner == 'player':
+                print("Congratulations! You win.")
+            elif winner == 'dealer':
+                print("Sorry, you lose. Better luck next time.")
+            else:
+                print("It's a tie!")
 
-if __name__ == "__main__":
+            play_again = input("Do you want to play again? (Enter 'yes' to play again, 'no' to exit): ").lower()
+            if play_again != 'yes':
+                break  # Exit the loop if the player chooses not to play again
+
+if input("Do you want to play Blackjack? (Enter 'yes' to play, 'no' to exit): ").lower() == 'yes':
     blackjack_game = BlackjackGame()
     blackjack_game.play_game()
